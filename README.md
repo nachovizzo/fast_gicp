@@ -1,6 +1,6 @@
 # fast_gicp
 
-This package is a collection of GICP-based fast point cloud registration algorithms. It constains a multi-threaded GICP as well as multi-thread and GPU implementations of our voxelized GICP (VGICP) algorithm. All the implemented algorithms have the PCL registration interface so that it can be used as an inplace replacement for GICP in PCL.
+This package is a collection of GICP-based fast point cloud registration algorithms. It constains a multi-threaded GICP as well as multi-thread and GPU implementations of our voxelized GICP (VGICP) algorithm. All the implemented algorithms have the PCL registration interface so that they can be used as an inplace replacement for GICP in PCL.
 
 - FastGICP: multi-threaded GICP algorithm (**\~40FPS**)
 - FastGICPSingleThread: GICP algorithm optimized for single-threading (**\~15FPS**)
@@ -8,6 +8,34 @@ This package is a collection of GICP-based fast point cloud registration algorit
 - FastVGICPCuda: CUDA-optimized voxelized GICP algorithm (**\~120FPS**)
 ![proctime](data/proctime.png)
 
+
+## Installation
+
+### Dependencies
+- PCL
+- Eigen
+- [Sophus](https://github.com/strasdat/Sophus)
+- [nvbio](https://github.com/NVlabs/nvbio)
+- OpenMP (optional)
+- CUDA (optional)
+
+We have tested this package with Ubuntu 18.04, ROS melodic, and CUDA 10.2.
+
+### ROS
+```bash
+cd ~/catkin_ws/src
+git clone https://github.com/SMRT-AIST/fast_gicp --recursive
+cd .. && catkin_make -DCMAKE_BUILD_TYPE=Release
+```
+
+### Non-ROS
+```bash
+git clone https://github.com/SMRT-AIST/fast_gicp --recursive
+cd fast_gicp && git checkout non_ros
+mkdir build && cd build
+cmake .. -DCMAKE_BUILD_TYPE=Release
+make -j8
+```
 
 ## Benchmark
 CPU:Core i9-9900K GPU:GeForce RTX2080Ti
@@ -38,6 +66,15 @@ single:47.8433[msec] 100times:3235.27[msec] 100times_reuse:1582.99[msec]
 ```
 
 See [src/align.cpp](https://github.com/SMRT-AIST/fast_gicp/blob/master/src/align.cpp) for the detailed usage.
+
+## Test on KITTI
+
+```bash
+# Perform frame-by-frame registration
+rosrun fast_gicp gicp_kitti /your/kitti/path/sequences/00/velodyne
+```
+
+![kitti00](https://user-images.githubusercontent.com/31344317/86207074-b98ac280-bba8-11ea-9687-e65f03aaf25b.png)
 
 ## Related packages
 - [ndt_omp](https://github.com/koide3/ndt_omp)

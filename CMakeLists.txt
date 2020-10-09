@@ -51,6 +51,11 @@ target_link_libraries(gicp_align
   fast_gicp
 )
 
+add_executable(gicp_kitti src/kitti.cpp)
+target_link_libraries(gicp_kitti
+  ${PCL_LIBRARIES}
+  fast_gicp
+)
 
 if(CUDA_FOUND)
   set(CUDA_NVCC_FLAGS "--expt-relaxed-constexpr")
