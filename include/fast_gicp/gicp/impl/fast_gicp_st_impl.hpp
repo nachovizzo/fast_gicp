@@ -1,6 +1,8 @@
 #ifndef FAST_GICP_FAST_GICP_ST_IMPL_HPP
 #define FAST_GICP_FAST_GICP_ST_IMPL_HPP
 
+#include <memory>
+
 #include <sophus/so3.hpp>
 
 #include <fast_gicp/so3/so3.hpp>
@@ -230,7 +232,7 @@ Eigen::VectorXf FastGICPSingleThread<PointSource, PointTarget>::loss_ls(const Ei
 
 template<typename PointSource, typename PointTarget>
 template<typename PointT>
-bool FastGICPSingleThread<PointSource, PointTarget>::calculate_covariances(const boost::shared_ptr<const pcl::PointCloud<PointT>>& cloud, pcl::search::KdTree<PointT>& kdtree, std::vector<Matrix4, Eigen::aligned_allocator<Matrix4>>& covariances) {
+bool FastGICPSingleThread<PointSource, PointTarget>::calculate_covariances(const std::shared_ptr<const pcl::PointCloud<PointT>>& cloud, pcl::search::KdTree<PointT>& kdtree, std::vector<Matrix4, Eigen::aligned_allocator<Matrix4>>& covariances) {
   kdtree.setInputCloud(cloud);
   covariances.resize(cloud->size());
 

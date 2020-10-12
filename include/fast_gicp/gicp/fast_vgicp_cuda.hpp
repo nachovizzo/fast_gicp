@@ -3,6 +3,7 @@
 
 #include <Eigen/Core>
 #include <Eigen/Geometry>
+#include <memory>
 
 #include <pcl/point_types.h>
 #include <pcl/point_cloud.h>
@@ -35,7 +36,7 @@ public:
   using PointCloudTargetPtr = typename PointCloudTarget::Ptr;
   using PointCloudTargetConstPtr = typename PointCloudTarget::ConstPtr;
 
-  using Ptr = boost::shared_ptr<FastVGICPCuda<PointSource, PointTarget>>;
+  using Ptr = std::shared_ptr<FastVGICPCuda<PointSource, PointTarget>>;
 
   using pcl::Registration<PointSource, PointTarget, Scalar>::reg_name_;
   using pcl::Registration<PointSource, PointTarget, Scalar>::input_;
@@ -75,7 +76,7 @@ protected:
   virtual void computeTransformation(PointCloudSource& output, const Matrix4& guess) override;
 
   template<typename PointT>
-  std::vector<int> find_neighbors_parallel_kdtree(int k, const boost::shared_ptr<const pcl::PointCloud<PointT>>& cloud, pcl::search::KdTree<PointT>& kdtree) const;
+  std::vector<int> find_neighbors_parallel_kdtree(int k, const std::shared_ptr<const pcl::PointCloud<PointT>>& cloud, pcl::search::KdTree<PointT>& kdtree) const;
 
 private:
 private:

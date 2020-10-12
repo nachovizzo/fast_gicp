@@ -2,6 +2,7 @@
 #define FAST_GICP_FAST_VGICP_CUDA_IMPL_HPP
 
 #include <atomic>
+#include <memory>
 #include <Eigen/Core>
 #include <Eigen/Geometry>
 
@@ -134,7 +135,7 @@ void FastVGICPCuda<PointSource, PointTarget>::setInputTarget(const PointCloudTar
 
 template<typename PointSource, typename PointTarget>
 template<typename PointT>
-std::vector<int> FastVGICPCuda<PointSource, PointTarget>::find_neighbors_parallel_kdtree(int k, const boost::shared_ptr<const pcl::PointCloud<PointT>>& cloud, pcl::search::KdTree<PointT>& kdtree) const {
+std::vector<int> FastVGICPCuda<PointSource, PointTarget>::find_neighbors_parallel_kdtree(int k, const std::shared_ptr<const pcl::PointCloud<PointT>>& cloud, pcl::search::KdTree<PointT>& kdtree) const {
   kdtree.setInputCloud(cloud);
   std::vector<int> neighbors(cloud->size() * k);
 

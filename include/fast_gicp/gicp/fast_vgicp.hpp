@@ -2,6 +2,7 @@
 #define FAST_GICP_FAST_VGICP_HPP
 
 #include <unordered_map>
+#include <memory>
 
 #include <Eigen/Core>
 #include <Eigen/Geometry>
@@ -34,7 +35,7 @@ public:
   using PointCloudTargetPtr = typename PointCloudTarget::Ptr;
   using PointCloudTargetConstPtr = typename PointCloudTarget::ConstPtr;
 
-  using Ptr = boost::shared_ptr<FastVGICP<PointSource, PointTarget>>;
+  using Ptr = std::shared_ptr<FastVGICP<PointSource, PointTarget>>;
 
   using pcl::Registration<PointSource, PointTarget, Scalar>::reg_name_;
   using pcl::Registration<PointSource, PointTarget, Scalar>::input_;
@@ -90,7 +91,7 @@ private:
   Eigen::VectorXf loss_ls(const Eigen::Matrix<float, 6, 1>& x, Eigen::MatrixXf* J) const;
 
   template<typename PointT>
-  bool calculate_covariances(const boost::shared_ptr<const pcl::PointCloud<PointT>>& cloud, pcl::search::KdTree<PointT>& kdtree, std::vector<Matrix4, Eigen::aligned_allocator<Matrix4>>& covariances);
+  bool calculate_covariances(const std::shared_ptr<const pcl::PointCloud<PointT>>& cloud, pcl::search::KdTree<PointT>& kdtree, std::vector<Matrix4, Eigen::aligned_allocator<Matrix4>>& covariances);
 
 private:
   int num_threads_;

@@ -2,6 +2,7 @@
 #define FAST_GICP_FAST_VGICP_IMPL_HPP
 
 #include <atomic>
+#include <memory>
 #include <Eigen/Core>
 #include <Eigen/Geometry>
 
@@ -339,7 +340,7 @@ Eigen::VectorXf FastVGICP<PointSource, PointTarget>::loss_ls(const Eigen::Matrix
 
 template<typename PointSource, typename PointTarget>
 template<typename PointT>
-bool FastVGICP<PointSource, PointTarget>::calculate_covariances(const boost::shared_ptr<const pcl::PointCloud<PointT>>& cloud, pcl::search::KdTree<PointT>& kdtree, std::vector<Matrix4, Eigen::aligned_allocator<Matrix4>>& covariances) {
+bool FastVGICP<PointSource, PointTarget>::calculate_covariances(const std::shared_ptr<const pcl::PointCloud<PointT>>& cloud, pcl::search::KdTree<PointT>& kdtree, std::vector<Matrix4, Eigen::aligned_allocator<Matrix4>>& covariances) {
   kdtree.setInputCloud(cloud);
   covariances.resize(cloud->size());
 
