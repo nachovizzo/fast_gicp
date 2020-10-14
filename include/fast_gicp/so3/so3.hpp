@@ -17,6 +17,6 @@ inline Eigen::Matrix3f skew(const Eigen::Vector3f& x) {
   return skew;
 }
 
-}
+}  // namespace fast_gicp
 
 #endif

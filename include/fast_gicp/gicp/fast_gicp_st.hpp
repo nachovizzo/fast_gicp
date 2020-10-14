@@ -1,13 +1,14 @@
 #ifndef FAST_GICP_FAST_GICP_ST_HPP
 #define FAST_GICP_FAST_GICP_ST_HPP
 
+#include <pcl/point_cloud.h>
+#include <pcl/point_types.h>
+#include <pcl/registration/registration.h>
+
 #include <Eigen/Core>
 #include <Eigen/Geometry>
 #include <memory>
 
-#include <pcl/point_types.h>
-#include <pcl/point_cloud.h>
-#include <pcl/registration/registration.h>
 #include <fast_gicp/gicp/gicp_settings.hpp>
 
 namespace fast_gicp {
@@ -15,17 +16,21 @@ namespace fast_gicp {
 /**
  * @brief Fast GICP algorithm optimized for single threading
  */
-template<typename PointSource, typename PointTarget>
-class FastGICPSingleThread : public pcl::Registration<PointSource, PointTarget, float> {
-public:
+template <typename PointSource, typename PointTarget>
+class FastGICPSingleThread
+    : public pcl::Registration<PointSource, PointTarget, float> {
+ public:
   using Scalar = float;
-  using Matrix4 = typename pcl::Registration<PointSource, PointTarget, Scalar>::Matrix4;
+  using Matrix4 =
+      typename pcl::Registration<PointSource, PointTarget, Scalar>::Matrix4;
 
-  using PointCloudSource = typename pcl::Registration<PointSource, PointTarget, Scalar>::PointCloudSource;
+  using PointCloudSource = typename pcl::
+      Registration<PointSource, PointTarget, Scalar>::PointCloudSource;
   using PointCloudSourcePtr = typename PointCloudSource::Ptr;
   using PointCloudSourceConstPtr = typename PointCloudSource::ConstPtr;
 
-  using PointCloudTarget = typename pcl::Registration<PointSource, PointTarget, Scalar>::PointCloudTarget;
+  using PointCloudTarget = typename pcl::
+      Registration<PointSource, PointTarget, Scalar>::PointCloudTarget;
   using PointCloudTargetPtr = typename PointCloudTarget::Ptr;
   using PointCloudTargetConstPtr = typename PointCloudTarget::ConstPtr;
 
@@ -38,10 +43,13 @@ public:
 
   using pcl::Registration<PointSource, PointTarget, Scalar>::nr_iterations_;
   using pcl::Registration<PointSource, PointTarget, Scalar>::max_iterations_;
-  using pcl::Registration<PointSource, PointTarget, Scalar>::final_transformation_;
-  using pcl::Registration<PointSource, PointTarget, Scalar>::transformation_epsilon_;
+  using pcl::Registration<PointSource, PointTarget, Scalar>::
+      final_transformation_;
+  using pcl::Registration<PointSource, PointTarget, Scalar>::
+      transformation_epsilon_;
   using pcl::Registration<PointSource, PointTarget, Scalar>::converged_;
-  using pcl::Registration<PointSource, PointTarget, Scalar>::corr_dist_threshold_;
+  using pcl::Registration<PointSource, PointTarget, Scalar>::
+      corr_dist_threshold_;
 
   FastGICPSingleThread();
   virtual ~FastGICPSingleThread() override;
@@ -62,20 +70,25 @@ public:
 
   virtual void setInputTarget(const PointCloudTargetConstPtr& cloud) override;
 
-protected:
-  virtual void computeTransformation(PointCloudSource& output, const Matrix4& guess) override;
+ protected:
+  virtual void computeTransformation(PointCloudSource& output,
+                                     const Matrix4& guess) override;
 
-private:
+ private:
   bool is_converged(const Eigen::Matrix<float, 6, 1>& delta) const;
 
   void update_correspondences(const Eigen::Matrix<float, 6, 1>& x);
 
-  Eigen::VectorXf loss_ls(const Eigen::Matrix<float, 6, 1>& x, Eigen::MatrixXf* J) const;
+  Eigen::VectorXf loss_ls(const Eigen::Matrix<float, 6, 1>& x,
+                          Eigen::MatrixXf* J) const;
 
-  template<typename PointT>
-  bool calculate_covariances(const std::shared_ptr<const pcl::PointCloud<PointT>>& cloud, pcl::search::KdTree<PointT>& kdtree, std::vector<Matrix4, Eigen::aligned_allocator<Matrix4>>& covariances);
+  template <typename PointT>
+  bool calculate_covariances(
+      const std::shared_ptr<const pcl::PointCloud<PointT>>& cloud,
+      pcl::search::KdTree<PointT>& kdtree,
+      std::vector<Matrix4, Eigen::aligned_allocator<Matrix4>>& covariances);
 
-private:
+ private:
   double rotation_epsilon_;
   int k_correspondences_;
   RegularizationMethod regularization_method_;
@@ -90,7 +103,8 @@ private:
   std::vector<float> sq_distances;
 
   std::vector<float> second_sq_distances;
-  std::vector<Eigen::Vector4f, Eigen::aligned_allocator<Eigen::Vector4f>> anchors;
+  std::vector<Eigen::Vector4f, Eigen::aligned_allocator<Eigen::Vector4f>>
+      anchors;
 };
 }  // namespace fast_gicp
 

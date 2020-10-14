@@ -6,7 +6,7 @@
 namespace fast_gicp {
 
 class Vector3iHash {
-public:
+ public:
   size_t operator()(const Eigen::Vector3i& x) const {
     size_t seed = 0;
     boost::hash_combine(seed, x[0]);
@@ -17,7 +17,7 @@ public:
 };
 
 struct GaussianVoxel {
-public:
+ public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
   using Ptr = std::shared_ptr<GaussianVoxel>;
 
@@ -28,24 +28,26 @@ public:
   }
   virtual ~GaussianVoxel() {}
 
-  virtual void append(const Eigen::Vector4f& mean_, const Eigen::Matrix4f& cov_) = 0;
+  virtual void append(const Eigen::Vector4f& mean_,
+                      const Eigen::Matrix4f& cov_) = 0;
 
   virtual void finalize() = 0;
 
-public:
+ public:
   int num_points;
   Eigen::Vector4f mean;
   Eigen::Matrix4f cov;
 };
 
 struct MultiplicativeGaussianVoxel : GaussianVoxel {
-public:
+ public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
   MultiplicativeGaussianVoxel() : GaussianVoxel() {}
   virtual ~MultiplicativeGaussianVoxel() {}
 
-  virtual void append(const Eigen::Vector4f& mean_, const Eigen::Matrix4f& cov_) override {
+  virtual void append(const Eigen::Vector4f& mean_,
+                      const Eigen::Matrix4f& cov_) override {
     num_points++;
     Eigen::Matrix4f cov_inv = cov_;
     cov_inv(3, 3) = 1;
@@ -65,13 +67,14 @@ public:
 };
 
 struct AdditiveGaussianVoxel : GaussianVoxel {
-public:
+ public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
   AdditiveGaussianVoxel() : GaussianVoxel() {}
   virtual ~AdditiveGaussianVoxel() {}
 
-  virtual void append(const Eigen::Vector4f& mean_, const Eigen::Matrix4f& cov_) override {
+  virtual void append(const Eigen::Vector4f& mean_,
+                      const Eigen::Matrix4f& cov_) override {
     num_points++;
     mean += mean_;
     cov += cov_;

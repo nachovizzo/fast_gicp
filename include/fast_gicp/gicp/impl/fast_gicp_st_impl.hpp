@@ -3,15 +3,14 @@
 
 #include <memory>
 
-#include <sophus/so3.hpp>
-
-#include <fast_gicp/so3/so3.hpp>
-#include <fast_gicp/opt/gauss_newton.hpp>
 #include <fast_gicp/gicp/fast_gicp_st.hpp>
+#include <fast_gicp/opt/gauss_newton.hpp>
+#include <fast_gicp/so3/so3.hpp>
+#include <sophus/so3.hpp>
 
 namespace fast_gicp {
 
-template<typename PointSource, typename PointTarget>
+template <typename PointSource, typename PointTarget>
 FastGICPSingleThread<PointSource, PointTarget>::FastGICPSingleThread() {
   reg_name_ = "FastGICPSingleThread";
   max_iterations_ = 64;
@@ -27,25 +26,28 @@ FastGICPSingleThread<PointSource, PointTarget>::FastGICPSingleThread() {
   target_kdtree.reset(new pcl::search::KdTree<PointTarget>);
 }
 
-template<typename PointSource, typename PointTarget>
+template <typename PointSource, typename PointTarget>
 FastGICPSingleThread<PointSource, PointTarget>::~FastGICPSingleThread() {}
 
-template<typename PointSource, typename PointTarget>
-void FastGICPSingleThread<PointSource, PointTarget>::setRotationEpsilon(double eps) {
+template <typename PointSource, typename PointTarget>
+void FastGICPSingleThread<PointSource, PointTarget>::setRotationEpsilon(
+    double eps) {
   rotation_epsilon_ = eps;
 }
 
-template<typename PointSource, typename PointTarget>
-void FastGICPSingleThread<PointSource, PointTarget>::setCorrespondenceRandomness(int k) {
+template <typename PointSource, typename PointTarget>
+void FastGICPSingleThread<PointSource,
+                          PointTarget>::setCorrespondenceRandomness(int k) {
   k_correspondences_ = k;
 }
 
-template<typename PointSource, typename PointTarget>
-void FastGICPSingleThread<PointSource, PointTarget>::setRegularizationMethod(RegularizationMethod method) {
+template <typename PointSource, typename PointTarget>
+void FastGICPSingleThread<PointSource, PointTarget>::setRegularizationMethod(
+    RegularizationMethod method) {
   regularization_method_ = method;
 }
 
-template<typename PointSource, typename PointTarget>
+template <typename PointSource, typename PointTarget>
 void FastGICPSingleThread<PointSource, PointTarget>::swapSourceAndTarget() {
   input_.swap(target_);
   source_kdtree.swap(target_kdtree);
@@ -55,19 +57,20 @@ void FastGICPSingleThread<PointSource, PointTarget>::swapSourceAndTarget() {
   sq_distances.clear();
 }
 
-template<typename PointSource, typename PointTarget>
+template <typename PointSource, typename PointTarget>
 void FastGICPSingleThread<PointSource, PointTarget>::clearSource() {
   input_.reset();
 }
 
-template<typename PointSource, typename PointTarget>
+template <typename PointSource, typename PointTarget>
 void FastGICPSingleThread<PointSource, PointTarget>::clearTarget() {
   target_.reset();
 }
 
-template<typename PointSource, typename PointTarget>
-void FastGICPSingleThread<PointSource, PointTarget>::setInputSource(const PointCloudSourceConstPtr& cloud) {
-  if(input_ == cloud) {
+template <typename PointSource, typename PointTarget>
+void FastGICPSingleThread<PointSource, PointTarget>::setInputSource(
+    const PointCloudSourceConstPtr& cloud) {
+  if (input_ == cloud) {
     return;
   }
 
@@ -75,9 +78,10 @@ void FastGICPSingleThread<PointSource, PointTarget>::setInputSource(const PointC
   calculate_covariances(cloud, *source_kdtree, source_covs);
 }
 
-template<typename PointSource, typename PointTarget>
-void FastGICPSingleThread<PointSource, PointTarget>::setInputTarget(const PointCloudTargetConstPtr& cloud) {
-  if(target_ == cloud) {
+template <typename PointSource, typename PointTarget>
+void FastGICPSingleThread<PointSource, PointTarget>::setInputTarget(
+    const PointCloudTargetConstPtr& cloud) {
+  if (target_ == cloud) {
     return;
   }
 
@@ -85,8 +89,9 @@ void FastGICPSingleThread<PointSource, PointTarget>::setInputTarget(const PointC
   calculate_covariances(cloud, *target_kdtree, target_covs);
 }
 
-template<typename PointSource, typename PointTarget>
-void FastGICPSingleThread<PointSource, PointTarget>::computeTransformation(PointCloudSource& output, const Matrix4& guess) {
+template <typename PointSource, typename PointTarget>
+void FastGICPSingleThread<PointSource, PointTarget>::computeTransformation(
+    PointCloudSource& output, const Matrix4& guess) {
   anchors.clear();
 
   Eigen::Matrix<float, 6, 1> x0;
@@ -94,21 +99,22 @@ void FastGICPSingleThread<PointSource, PointTarget>::computeTransformation(Point
   x0.tail<3>() = guess.template block<3, 1>(0, 3);
 
   // prevent stacking at zero
-  if(x0.head<3>().norm() < 1e-2) {
+  if (x0.head<3>().norm() < 1e-2) {
     x0.head<3>() = (Eigen::Vector3f::Random()).normalized() * 1e-2;
   }
 
   converged_ = false;
   GaussNewton<double, 6> solver;
 
-  for(int i = 0; i < max_iterations_; i++) {
+  for (int i = 0; i < max_iterations_; i++) {
     nr_iterations_ = i;
 
     update_correspondences(x0);
     Eigen::MatrixXf J;
     Eigen::VectorXf loss = loss_ls(x0, &J);
 
-    Eigen::Matrix<float, 6, 1> delta = solver.delta(loss.cast<double>(), J.cast<double>()).cast<float>();
+    Eigen::Matrix<float, 6, 1> delta =
+        solver.delta(loss.cast<double>(), J.cast<double>()).cast<float>();
 
     Eigen::Isometry3f x0_ = Eigen::Isometry3f::Identity();
     x0_.linear() = Sophus::SO3f::exp(x0.head<3>()).matrix();
@@ -123,23 +129,26 @@ void FastGICPSingleThread<PointSource, PointTarget>::computeTransformation(Point
     x0.head<3>() = Sophus::SO3f(x1_.linear()).log();
     x0.tail<3>() = x1_.translation();
 
-    if(is_converged(delta)) {
+    if (is_converged(delta)) {
       converged_ = true;
       break;
     }
   }
 
   final_transformation_.setIdentity();
-  final_transformation_.template block<3, 3>(0, 0) = Sophus::SO3f::exp(x0.head<3>()).matrix();
+  final_transformation_.template block<3, 3>(0, 0) =
+      Sophus::SO3f::exp(x0.head<3>()).matrix();
   final_transformation_.template block<3, 1>(0, 3) = x0.tail<3>();
 
   pcl::transformPointCloud(*input_, output, final_transformation_);
 }
 
-template<typename PointSource, typename PointTarget>
-bool FastGICPSingleThread<PointSource, PointTarget>::is_converged(const Eigen::Matrix<float, 6, 1>& delta) const {
+template <typename PointSource, typename PointTarget>
+bool FastGICPSingleThread<PointSource, PointTarget>::is_converged(
+    const Eigen::Matrix<float, 6, 1>& delta) const {
   double accum = 0.0;
-  Eigen::Matrix3f R = Sophus::SO3f::exp(delta.head<3>()).matrix() - Eigen::Matrix3f::Identity();
+  Eigen::Matrix3f R =
+      Sophus::SO3f::exp(delta.head<3>()).matrix() - Eigen::Matrix3f::Identity();
   Eigen::Vector3f t = delta.tail<3>();
 
   Eigen::Matrix3f r_delta = 1.0 / rotation_epsilon_ * R.array().abs();
@@ -148,8 +157,9 @@ bool FastGICPSingleThread<PointSource, PointTarget>::is_converged(const Eigen::M
   return std::max(r_delta.maxCoeff(), t_delta.maxCoeff()) < 1;
 }
 
-template<typename PointSource, typename PointTarget>
-void FastGICPSingleThread<PointSource, PointTarget>::update_correspondences(const Eigen::Matrix<float, 6, 1>& x) {
+template <typename PointSource, typename PointTarget>
+void FastGICPSingleThread<PointSource, PointTarget>::update_correspondences(
+    const Eigen::Matrix<float, 6, 1>& x) {
   Eigen::Matrix4f trans = Eigen::Matrix4f::Identity();
   trans.block<3, 3>(0, 0) = Sophus::SO3f::exp(x.head<3>()).matrix();
   trans.block<3, 1>(0, 3) = x.tail<3>();
@@ -164,16 +174,16 @@ void FastGICPSingleThread<PointSource, PointTarget>::update_correspondences(cons
   std::vector<int> k_indices;
   std::vector<float> k_sq_dists;
 
-  for(int i = 0; i < input_->size(); i++) {
+  for (int i = 0; i < input_->size(); i++) {
     PointTarget pt;
     pt.getVector4fMap() = trans * input_->at(i).getVector4fMap();
 
-    if(!is_first) {
+    if (!is_first) {
       double d = (pt.getVector4fMap() - anchors[i]).norm();
       double max_first = std::sqrt(sq_distances[i]) + d;
       double min_second = std::sqrt(second_sq_distances[i]) - d;
 
-      if(max_first < min_second) {
+      if (max_first < min_second) {
         continue;
       }
     }
@@ -187,22 +197,27 @@ void FastGICPSingleThread<PointSource, PointTarget>::update_correspondences(cons
   }
 }
 
-template<typename PointSource, typename PointTarget>
-Eigen::VectorXf FastGICPSingleThread<PointSource, PointTarget>::loss_ls(const Eigen::Matrix<float, 6, 1>& x, Eigen::MatrixXf* J) const {
+template <typename PointSource, typename PointTarget>
+Eigen::VectorXf FastGICPSingleThread<PointSource, PointTarget>::loss_ls(
+    const Eigen::Matrix<float, 6, 1>& x, Eigen::MatrixXf* J) const {
   Eigen::Matrix4f trans = Eigen::Matrix4f::Identity();
   trans.block<3, 3>(0, 0) = Sophus::SO3f::exp(x.head<3>()).matrix();
   trans.block<3, 1>(0, 3) = x.tail<3>();
 
   int count = 0;
-  std::vector<Eigen::Vector3f, Eigen::aligned_allocator<Eigen::Vector3f>> losses(input_->size());
+  std::vector<Eigen::Vector3f, Eigen::aligned_allocator<Eigen::Vector3f>>
+      losses(input_->size());
   // use row-major arrangement for ease of repacking
-  std::vector<Eigen::Matrix<float, 3, 6, Eigen::RowMajor>, Eigen::aligned_allocator<Eigen::Matrix<float, 3, 6, Eigen::RowMajor>>> Js(input_->size());
+  std::vector<
+      Eigen::Matrix<float, 3, 6, Eigen::RowMajor>,
+      Eigen::aligned_allocator<Eigen::Matrix<float, 3, 6, Eigen::RowMajor>>>
+      Js(input_->size());
 
-  for(int i = 0; i < input_->size(); i++) {
+  for (int i = 0; i < input_->size(); i++) {
     int target_index = correspondences[i];
     float sq_dist = sq_distances[i];
 
-    if(sq_dist > corr_dist_threshold_ * corr_dist_threshold_) {
+    if (sq_dist > corr_dist_threshold_ * corr_dist_threshold_) {
       continue;
     }
 
@@ -219,20 +234,26 @@ Eigen::VectorXf FastGICPSingleThread<PointSource, PointTarget>::loss_ls(const Ei
 
     Eigen::Matrix4f RCR_inv = RCR.inverse();
     losses[count] = (RCR_inv * d).eval().head<3>();
-    Js[count].block<3, 3>(0, 0) = RCR_inv.block<3, 3>(0, 0) * skew(transed_mean_A.head<3>());
+    Js[count].block<3, 3>(0, 0) =
+        RCR_inv.block<3, 3>(0, 0) * skew(transed_mean_A.head<3>());
     Js[count].block<3, 3>(0, 3) = -RCR_inv.block<3, 3>(0, 0);
     count++;
   }
 
   int final_size = count;
-  Eigen::VectorXf loss = Eigen::Map<Eigen::VectorXf>(losses.front().data(), final_size * 3);
-  *J = Eigen::Map<Eigen::MatrixXf>(Js.front().data(), 6, final_size * 3).transpose();
+  Eigen::VectorXf loss =
+      Eigen::Map<Eigen::VectorXf>(losses.front().data(), final_size * 3);
+  *J = Eigen::Map<Eigen::MatrixXf>(Js.front().data(), 6, final_size * 3)
+           .transpose();
   return loss;
 }
 
-template<typename PointSource, typename PointTarget>
-template<typename PointT>
-bool FastGICPSingleThread<PointSource, PointTarget>::calculate_covariances(const std::shared_ptr<const pcl::PointCloud<PointT>>& cloud, pcl::search::KdTree<PointT>& kdtree, std::vector<Matrix4, Eigen::aligned_allocator<Matrix4>>& covariances) {
+template <typename PointSource, typename PointTarget>
+template <typename PointT>
+bool FastGICPSingleThread<PointSource, PointTarget>::calculate_covariances(
+    const std::shared_ptr<const pcl::PointCloud<PointT>>& cloud,
+    pcl::search::KdTree<PointT>& kdtree,
+    std::vector<Matrix4, Eigen::aligned_allocator<Matrix4>>& covariances) {
   kdtree.setInputCloud(cloud);
   covariances.resize(cloud->size());
 
@@ -241,27 +262,31 @@ bool FastGICPSingleThread<PointSource, PointTarget>::calculate_covariances(const
   Eigen::Matrix<float, 4, -1> data(4, k_correspondences_);
   Eigen::JacobiSVD<Eigen::Matrix3f> svd;
 
-  for(int i = 0; i < cloud->size(); i++) {
-    kdtree.nearestKSearch(cloud->at(i), k_correspondences_, k_indices, k_sq_distances);
+  for (int i = 0; i < cloud->size(); i++) {
+    kdtree.nearestKSearch(
+        cloud->at(i), k_correspondences_, k_indices, k_sq_distances);
 
-    for(int j = 0; j < k_indices.size(); j++) {
+    for (int j = 0; j < k_indices.size(); j++) {
       data.col(j) = cloud->at(k_indices[j]).getVector4fMap();
     }
 
     data.colwise() -= data.rowwise().mean().eval();
     Eigen::Matrix4f cov = data * data.transpose();
 
-    if(regularization_method_ == FROBENIUS) {
+    if (regularization_method_ == FROBENIUS) {
       double lambda = 1e-6;
-      Eigen::Matrix3f C = cov.block<3, 3>(0, 0) + lambda * Eigen::Matrix3f::Identity();
+      Eigen::Matrix3f C =
+          cov.block<3, 3>(0, 0) + lambda * Eigen::Matrix3f::Identity();
       Eigen::Matrix3f C_inv = C.inverse();
       covariances[i].setZero();
-      covariances[i].template block<3, 3>(0, 0) = (C_inv / C_inv.norm()).inverse();
+      covariances[i].template block<3, 3>(0, 0) =
+          (C_inv / C_inv.norm()).inverse();
     } else {
-      Eigen::JacobiSVD<Eigen::Matrix3f> svd(cov.block<3, 3>(0, 0), Eigen::ComputeFullU | Eigen::ComputeFullV);
+      Eigen::JacobiSVD<Eigen::Matrix3f> svd(
+          cov.block<3, 3>(0, 0), Eigen::ComputeFullU | Eigen::ComputeFullV);
       Eigen::Vector3f values;
 
-      switch(regularization_method_) {
+      switch (regularization_method_) {
         default:
           std::cerr << "here must not be reached" << std::endl;
           abort();
@@ -277,7 +302,8 @@ bool FastGICPSingleThread<PointSource, PointTarget>::calculate_covariances(const
       }
 
       covariances[i].setZero();
-      covariances[i].template block<3, 3>(0, 0) = svd.matrixU() * values.asDiagonal() * svd.matrixV().transpose();
+      covariances[i].template block<3, 3>(0, 0) =
+          svd.matrixU() * values.asDiagonal() * svd.matrixV().transpose();
     }
   }
 

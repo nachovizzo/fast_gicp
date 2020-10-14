@@ -27,7 +27,8 @@ __host__ __device__ uint64_t vector3i_hash(const Eigen::Vector3i& x) {
   return seed;
 }
 
-__host__ __device__ Eigen::Vector3i calc_voxel_coord(const Eigen::Vector3f& x, float resolution) {
+__host__ __device__ Eigen::Vector3i calc_voxel_coord(const Eigen::Vector3f& x,
+                                                     float resolution) {
   Eigen::Vector3i coord = (x.array() / resolution - 0.5).floor().cast<int>();
   return coord;
 }
